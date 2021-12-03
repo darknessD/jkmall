@@ -1,0 +1,3 @@
+com\changgou\oauth\ParseJwtTest.class
+com\changgou\oauth\CreateJwtTest.class
+com\changgou\oauth\ReadKeyTest.class

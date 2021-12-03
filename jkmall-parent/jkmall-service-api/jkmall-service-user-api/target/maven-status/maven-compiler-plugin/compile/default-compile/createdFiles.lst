@@ -1,0 +1,14 @@
+com\jkmall\user\feign\AreasFeign.class
+com\jkmall\user\feign\OauthClientDetailsFeign.class
+com\jkmall\user\pojo\Cities.class
+com\jkmall\user\pojo\Provinces.class
+com\jkmall\user\feign\UserFeign.class
+com\jkmall\user\pojo\Address.class
+com\jkmall\user\pojo\UndoLog.class
+com\jkmall\user\pojo\User.class
+com\jkmall\user\pojo\OauthClientDetails.class
+com\jkmall\user\feign\AddressFeign.class
+com\jkmall\user\pojo\Areas.class
+com\jkmall\user\feign\CitiesFeign.class
+com\jkmall\user\feign\ProvincesFeign.class
+com\jkmall\user\feign\UndoLogFeign.class

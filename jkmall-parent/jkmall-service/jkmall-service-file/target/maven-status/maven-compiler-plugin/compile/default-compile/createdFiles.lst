@@ -1,0 +1,5 @@
+com\jkmall\util\FastDFSUtil.class
+com\jkmall\FileApplication.class
+com\jkmall\file\FastDFSFile.class
+com\jkmall\util\FastDFSClient.class
+com\jkmall\controller\FileController.class

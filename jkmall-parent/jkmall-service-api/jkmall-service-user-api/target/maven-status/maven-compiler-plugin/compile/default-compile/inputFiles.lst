@@ -1,0 +1,14 @@
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\Address.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\UndoLog.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\UndoLogFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\ProvincesFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\Provinces.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\AreasFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\OauthClientDetailsFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\Cities.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\User.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\AddressFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\Areas.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\CitiesFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\feign\UserFeign.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service-api\jkmall-service-user-api\src\main\java\com\jkmall\user\pojo\OauthClientDetails.java

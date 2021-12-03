@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="jkmall-gateway-web" />
+        <module name="jkmall-user-oauth" />
+        <module name="jkmall-service-order-api" />
+        <module name="jkmall-service-user" />
+        <module name="jkmall-common" />
+        <module name="jkmall-service-goods-api" />
+        <module name="jkmall-service-user-api" />
+        <module name="jkmall-service-search" />
+        <module name="jkmall-service-goods" />
+        <module name="code-template" />
+        <module name="jkmall-eureka" />
+        <module name="jkmall-service-file" />
+        <module name="jkmall-service-order" />
+        <module name="jkmall-common-db" />
+        <module name="jkmall-service-search-api" />
+        <module name="jkmall-service-canal" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="code-template" target="1.5" />
+      <module name="jkmall-common" target="8" />
+      <module name="jkmall-common-db" target="8" />
+      <module name="jkmall-eureka" target="8" />
+      <module name="jkmall-gateway" target="8" />
+      <module name="jkmall-gateway-web" target="8" />
+      <module name="jkmall-parent" target="8" />
+      <module name="jkmall-service" target="8" />
+      <module name="jkmall-service-api" target="8" />
+      <module name="jkmall-service-canal" target="8" />
+      <module name="jkmall-service-file" target="8" />
+      <module name="jkmall-service-goods" target="8" />
+      <module name="jkmall-service-goods-api" target="8" />
+      <module name="jkmall-service-order" target="8" />
+      <module name="jkmall-service-order-api" target="8" />
+      <module name="jkmall-service-search" target="8" />
+      <module name="jkmall-service-search-api" target="8" />
+      <module name="jkmall-service-user" target="8" />
+      <module name="jkmall-service-user-api" target="8" />
+      <module name="jkmall-user-oauth" target="8" />
+      <module name="jkmall-web" target="8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="jkmall-common" options="-parameters" />
+      <module name="jkmall-common-db" options="-parameters" />
+      <module name="jkmall-eureka" options="-parameters" />
+      <module name="jkmall-gateway" options="-parameters" />
+      <module name="jkmall-gateway-web" options="-parameters" />
+      <module name="jkmall-service" options="-parameters" />
+      <module name="jkmall-service-api" options="-parameters" />
+      <module name="jkmall-service-canal" options="-parameters" />
+      <module name="jkmall-service-file" options="-parameters" />
+      <module name="jkmall-service-goods" options="-parameters" />
+      <module name="jkmall-service-goods-api" options="-parameters" />
+      <module name="jkmall-service-order" options="-parameters" />
+      <module name="jkmall-service-order-api" options="-parameters" />
+      <module name="jkmall-service-search" options="-parameters" />
+      <module name="jkmall-service-search-api" options="-parameters" />
+      <module name="jkmall-service-user" options="-parameters" />
+      <module name="jkmall-service-user-api" options="-parameters" />
+      <module name="jkmall-user-oauth" options="-parameters" />
+      <module name="jkmall-web" options="-parameters" />
+    </option>
+  </component>
+</project>

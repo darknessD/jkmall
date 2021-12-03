@@ -1,0 +1,3 @@
+1. 当feign开启熔断模式的时候，feign 调用会失败 （feign: hystrix: enabled: true）
+   原因：feign 使用的是线程池模式，当开启熔断的时候，feign 所在的服务端不在同一个线程，这时attributes取到的将会是空值
+   内部应用大致是 Thread 的线程，开启熔断以后请求的线程发生了变化，导致线程不一致了，所以 token 也没有传递过去。

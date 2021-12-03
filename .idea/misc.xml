@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/jkmall-parent/pom.xml" />
+        <option value="$PROJECT_DIR$/jkmall-parent/jkmall-service/jkmall-service-file/pom.xml" />
+        <option value="$PROJECT_DIR$/code-template-master/pom.xml" />
+        <option value="$PROJECT_DIR$/jkmall-parent/changgou-user-oauth/pom.xml" />
+        <option value="$PROJECT_DIR$/jkmall-parent/jkmall-user-oauth/pom.xml" />
+        <option value="$PROJECT_DIR$/jkmall-parent/jkmall-service/pom.xml" />
+        <option value="$PROJECT_DIR$/jkmall-parent/jkmall-service/jkmall-service-user/pom.xml" />
+      </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/jkmall-parent/jkmall-service-goods/pom.xml" />
+        <option value="$PROJECT_DIR$/jkmall-parent/jkmall-service-search-api/pom.xml" />
+      </set>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+</project>

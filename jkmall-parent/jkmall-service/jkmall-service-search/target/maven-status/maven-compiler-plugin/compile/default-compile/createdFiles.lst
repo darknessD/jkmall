@@ -1,0 +1,5 @@
+com\jkmall\search\SearchApplication.class
+com\jkmall\search\service\SkuService.class
+com\jkmall\search\dao\SkuMapper.class
+com\jkmall\search\service\impl\SkuServiceImpl.class
+com\jkmall\search\controller\SkuController.class
