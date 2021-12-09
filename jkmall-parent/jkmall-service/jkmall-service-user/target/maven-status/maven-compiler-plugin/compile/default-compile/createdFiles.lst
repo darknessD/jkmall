@@ -18,6 +18,7 @@ com\jkmall\user\controller\UndoLogController.class
 com\jkmall\user\dao\UndoLogMapper.class
 com\jkmall\user\config\InterceptorConfig.class
 com\jkmall\user\controller\ProvincesController.class
+com\jkmall\user\util\JwtUtil.class
 com\jkmall\user\service\CitiesService.class
 com\jkmall\user\service\impl\UndoLogServiceImpl.class
 com\jkmall\user\dao\AddressMapper.class

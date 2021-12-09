@@ -52,7 +52,7 @@ public interface OrderService {
      * 新增Order
      * @param order
      */
-    void add(Order order);
+    int add(Order order);
 
     /**
      * 根据ID查询Order

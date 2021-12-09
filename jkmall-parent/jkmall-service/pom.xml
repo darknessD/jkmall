@@ -17,6 +17,7 @@
         <module>jkmall-service-search</module>
         <module>jkmall-service-user</module>
         <module>jkmall-service-order</module>
+        <module>jkmall-service-pay</module>
     </modules>
 
     <properties>

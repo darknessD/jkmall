@@ -13,6 +13,7 @@
         <module name="jkmall-common" />
         <module name="jkmall-service-goods-api" />
         <module name="jkmall-service-user-api" />
+        <module name="jkmall-service-pay" />
         <module name="jkmall-service-search" />
         <module name="jkmall-service-goods" />
         <module name="code-template" />
@@ -40,6 +41,7 @@
       <module name="jkmall-service-goods-api" target="8" />
       <module name="jkmall-service-order" target="8" />
       <module name="jkmall-service-order-api" target="8" />
+      <module name="jkmall-service-pay" target="8" />
       <module name="jkmall-service-search" target="8" />
       <module name="jkmall-service-search-api" target="8" />
       <module name="jkmall-service-user" target="8" />
@@ -63,6 +65,7 @@
       <module name="jkmall-service-goods-api" options="-parameters" />
       <module name="jkmall-service-order" options="-parameters" />
       <module name="jkmall-service-order-api" options="-parameters" />
+      <module name="jkmall-service-pay" options="-parameters" />
       <module name="jkmall-service-search" options="-parameters" />
       <module name="jkmall-service-search-api" options="-parameters" />
       <module name="jkmall-service-user" options="-parameters" />

@@ -1,15 +1,20 @@
 package com.jkmall.order.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageInfo;
 import com.jchen.entity.Result;
 import com.jchen.entity.StatusCode;
 import com.jkmall.order.pojo.Order;
 import com.jkmall.order.service.OrderService;
+import com.jkmall.order.util.JwtUtil;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /****
  * @Author:shenkunlin
@@ -107,19 +112,6 @@ public class OrderController {
     }
 
     /***
-     * 新增Order数据
-     * @param order
-     * @return
-     */
-    @ApiOperation(value = "Order添加",notes = "添加Order方法详情",tags = {"OrderController"})
-    @PostMapping
-    public Result add(@RequestBody  @ApiParam(name = "Order对象",value = "传入JSON数据",required = true) Order order){
-        //调用OrderService实现添加Order
-        orderService.add(order);
-        return new Result(true,StatusCode.OK,"添加成功");
-    }
-
-    /***
      * 根据ID查询Order数据
      * @param id
      * @return
@@ -143,5 +135,15 @@ public class OrderController {
         //调用OrderService实现查询所有Order
         List<Order> list = orderService.findAll();
         return new Result<List<Order>>(true, StatusCode.OK,"查询成功",list) ;
+    }
+
+    @PostMapping
+    public Result add(@RequestBody Order order){
+        OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        String claims = JwtUtil.decode(details.getTokenValue());
+        Map<String, Object> map = JSON.parseObject(claims, Map.class);
+        order.setUsername((String) map.get("username"));
+        orderService.add(order);
+        return new Result(true, StatusCode.OK, "Success");
     }
 }

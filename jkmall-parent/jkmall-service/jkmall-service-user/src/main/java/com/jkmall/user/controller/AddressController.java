@@ -1,15 +1,20 @@
 package com.jkmall.user.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageInfo;
 import com.jchen.entity.Result;
 import com.jchen.entity.StatusCode;
 import com.jkmall.user.pojo.Address;
 import com.jkmall.user.service.AddressService;
+import com.jkmall.user.util.JwtUtil;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /****
  * @Author:shenkunlin
@@ -144,4 +149,14 @@ public class AddressController {
         List<Address> list = addressService.findAll();
         return new Result<List<Address>>(true, StatusCode.OK,"查询成功",list) ;
     }
+
+    @GetMapping("/user/list")
+    public Result<List<Address>> findByUsername(){
+        OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        String claims = JwtUtil.decode(details.getTokenValue());
+        Map<String, Object> map = JSON.parseObject(claims, Map.class);
+        List<Address> username = addressService.findByUsername((String) map.get("username"));
+        return new Result<>(true, StatusCode.OK, "Success", username);
+    }
 }
+

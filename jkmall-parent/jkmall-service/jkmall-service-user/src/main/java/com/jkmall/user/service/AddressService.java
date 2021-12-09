@@ -66,4 +66,6 @@ public interface AddressService {
      * @return
      */
     List<Address> findAll();
+
+    List<Address> findByUsername(String username);
 }
