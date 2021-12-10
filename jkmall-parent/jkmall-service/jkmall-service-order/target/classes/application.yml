@@ -13,6 +13,10 @@ spring:
     port: 6379
   main:
     allow-bean-definition-overriding: true
+  rabbitmq:
+    host: 192.168.211.132
+    username: guest
+    password: guest
 
 eureka:
   client:
@@ -20,3 +24,17 @@ eureka:
       defaultZone: http://127.0.0.1:7001/eureka
   instance:
     prefer-ip-address: true
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000
+          strategy: SEMAPHORE
+
+mq:
+  pay:
+    queue:
+      order: queue.order

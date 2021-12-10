@@ -1,0 +1,14 @@
+com\jchen\entity\PageResult.class
+com\jchen\entity\IdWorker.class
+com\jchen\entity\CacheKey.class
+com\jchen\entity\HttpClient$1.class
+com\jchen\entity\JwtUtil.class
+com\jchen\entity\ChineseUtils.class
+com\jchen\entity\Result.class
+com\jchen\entity\BCrypt.class
+com\jchen\entity\Page.class
+com\jchen\interceptor\FeignInterceptor.class
+com\jchen\entity\HttpClient.class
+com\jchen\entity\StatusCode.class
+com\jchen\entity\Message.class
+com\jchen\entity\RandomValueUtil.class

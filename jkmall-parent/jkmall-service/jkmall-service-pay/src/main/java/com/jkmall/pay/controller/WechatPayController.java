@@ -1,10 +1,13 @@
 package com.jkmall.pay.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.jchen.entity.Result;
 import com.jchen.entity.StatusCode;
 import com.jkmall.pay.service.WechatPayService;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +23,15 @@ public class WechatPayController {
     
     @Autowired
     private WechatPayService wechatPayService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Value("${mq.pay.exchange.order}")
+    private String exchange;
+
+    @Value("${mq.pay.routing.key}")
+    private String routingKey;
     
     @RequestMapping("/create/native")
     public Result createPay(String orderNo, String totalAmount){
@@ -56,7 +68,7 @@ public class WechatPayController {
             String result = new String(outSteam.toByteArray(), "utf-8");
             //将xml字符串转换成Map结构
             Map<String, String> map = WXPayUtil.xmlToMap(result);
-
+            rabbitTemplate.convertAndSend(exchange, routingKey, JSON.toJSONString(map));
             //响应数据设置
             Map respMap = new HashMap();
             respMap.put("return_code","SUCCESS");
