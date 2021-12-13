@@ -66,4 +66,8 @@ public interface OrderService {
      * @return
      */
     List<Order> findAll();
+
+    void updateStatus(String orderNo, String payTime, String transactionId);
+
+    void deleteOrder(String orderNo);
 }

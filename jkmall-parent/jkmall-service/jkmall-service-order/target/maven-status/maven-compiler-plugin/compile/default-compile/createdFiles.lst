@@ -5,6 +5,7 @@ com\jkmall\order\dao\CategoryReportMapper.class
 com\jkmall\order\service\CartService.class
 com\jkmall\order\OrderApplication.class
 com\jkmall\order\service\impl\ReturnOrderItemServiceImpl.class
+com\jkmall\order\mq\QueueConfig.class
 com\jkmall\order\config\IDGeneratorConfig.class
 com\jkmall\order\dao\PreferentialMapper.class
 com\jkmall\order\dao\ReturnOrderMapper.class

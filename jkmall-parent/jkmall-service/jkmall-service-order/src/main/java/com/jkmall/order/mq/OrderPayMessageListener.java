@@ -5,7 +5,6 @@ import com.jkmall.order.service.OrderService;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -38,11 +37,11 @@ public class OrderPayMessageListener {
             if(result_code.equalsIgnoreCase("success")){
                 if(outtradeno!=null){
                     //修改订单状态  out_trade_no
-                    //orderService.updateStatus(outtradeno,result.get("transaction_id"));
+                    orderService.updateStatus(outtradeno,result.get("time_end"), result.get("transaction_id"));
                 }
             }else{
                 //订单删除
-                //orderService.deleteOrder(outtradeno);
+                orderService.deleteOrder(outtradeno);
             }
         }
 

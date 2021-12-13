@@ -9,12 +9,18 @@ import com.jkmall.order.pojo.Order;
 import com.jkmall.order.pojo.OrderItem;
 import com.jkmall.order.service.CartService;
 import com.jkmall.order.service.OrderService;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -41,6 +47,8 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * Order条件+分页查询
@@ -261,7 +269,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus("0");      //0:未完成,1:已完成，2：已退货
         order.setPayStatus("0");        //0:未支付，1：已支付，2：支付失败
         order.setConsignStatus("0");    //0:未发货，1：已发货，2：已收货
-        order.setId("NO."+idWorker.nextId());
+        order.setId(String.valueOf(idWorker.nextId()));
         int count = orderMapper.insertSelective(order);
 
         //添加订单明细
@@ -274,6 +282,15 @@ public class OrderServiceImpl implements OrderService {
 
         //清除Redis缓存购物车数据
         redisTemplate.delete("Cart_"+order.getUsername());
+
+        //发送延时队列
+        rabbitTemplate.convertAndSend("orderDelayQueue", (Object) order.getId(), new MessagePostProcessor() {
+            @Override
+            public Message postProcessMessage(Message message) throws AmqpException {
+                message.getMessageProperties().setExpiration("10000");
+                return message;
+            }
+        });
         return count;
     }
 
@@ -294,5 +311,29 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> findAll() {
         return orderMapper.selectAll();
+    }
+
+    @Override
+    public void updateStatus(String orderNo, String payTime, String transactionId) {
+        Order order = orderMapper.selectByPrimaryKey(orderNo);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date date = null;
+        try {
+            date = simpleDateFormat.parse(payTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        order.setPayStatus("1");
+        order.setPayTime(date);
+        order.setTransactionId(transactionId);
+        orderMapper.updateByPrimaryKeySelective(order);
+    }
+
+    @Override
+    public void deleteOrder(String orderNo) {
+        Order order = orderMapper.selectByPrimaryKey(orderNo);
+        order.setPayStatus("2");
+        order.setUpdateTime(new Date());
+        orderMapper.updateByPrimaryKeySelective(order);
     }
 }

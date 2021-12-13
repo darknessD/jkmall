@@ -23,6 +23,7 @@ E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\ma
 E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\service\ReturnCauseService.java
 E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\controller\CategoryReportController.java
 E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\controller\OrderLogController.java
+E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\mq\QueueConfig.java
 E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\config\TokenInterceptorConfig.java
 E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\service\impl\ReturnOrderServiceImpl.java
 E:\IdeaWorkspace\jkmall\jkmall-parent\jkmall-service\jkmall-service-order\src\main\java\com\jkmall\order\dao\ReturnOrderItemMapper.java
