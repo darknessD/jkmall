@@ -15,6 +15,7 @@
         <module>jkmall-service-search-api</module>
         <module>jkmall-service-user-api</module>
         <module>jkmall-service-order-api</module>
+        <module>jkmall-service-seckill-api</module>
     </modules>
 
     <properties>

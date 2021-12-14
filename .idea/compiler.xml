@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="jkmall-gateway-web" />
+        <module name="jkmall-service-seckill" />
         <module name="jkmall-user-oauth" />
         <module name="jkmall-service-order-api" />
         <module name="jkmall-service-user" />
@@ -16,6 +17,7 @@
         <module name="jkmall-service-pay" />
         <module name="jkmall-service-search" />
         <module name="jkmall-service-goods" />
+        <module name="jkmall-service-seckill-api" />
         <module name="code-template" />
         <module name="jkmall-eureka" />
         <module name="jkmall-service-file" />
@@ -44,6 +46,8 @@
       <module name="jkmall-service-pay" target="8" />
       <module name="jkmall-service-search" target="8" />
       <module name="jkmall-service-search-api" target="8" />
+      <module name="jkmall-service-seckill" target="8" />
+      <module name="jkmall-service-seckill-api" target="8" />
       <module name="jkmall-service-user" target="8" />
       <module name="jkmall-service-user-api" target="8" />
       <module name="jkmall-user-oauth" target="8" />
@@ -68,6 +72,8 @@
       <module name="jkmall-service-pay" options="-parameters" />
       <module name="jkmall-service-search" options="-parameters" />
       <module name="jkmall-service-search-api" options="-parameters" />
+      <module name="jkmall-service-seckill" options="-parameters" />
+      <module name="jkmall-service-seckill-api" options="-parameters" />
       <module name="jkmall-service-user" options="-parameters" />
       <module name="jkmall-service-user-api" options="-parameters" />
       <module name="jkmall-user-oauth" options="-parameters" />
