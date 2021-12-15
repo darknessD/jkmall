@@ -13,7 +13,6 @@ import java.util.List;
  * @Date 2019/6/18 13:58
  *****/
 @FeignClient(name="seckill")
-@RequestMapping("/seckillGoods")
 public interface SeckillGoodsFeign {
 
     /***
@@ -23,7 +22,7 @@ public interface SeckillGoodsFeign {
      * @param size
      * @return
      */
-    @PostMapping(value = "/search/{page}/{size}" )
+    @PostMapping(value = "/seckillGoods/search/{page}/{size}" )
     Result<PageInfo> findPage(@RequestBody(required = false) SeckillGoods seckillGoods, @PathVariable int page, @PathVariable  int size);
 
     /***
@@ -32,7 +31,7 @@ public interface SeckillGoodsFeign {
      * @param size:每页显示多少条
      * @return
      */
-    @GetMapping(value = "/search/{page}/{size}" )
+    @GetMapping(value = "/seckillGoods/search/{page}/{size}" )
     Result<PageInfo> findPage(@PathVariable  int page, @PathVariable  int size);
 
     /***
@@ -40,7 +39,7 @@ public interface SeckillGoodsFeign {
      * @param seckillGoods
      * @return
      */
-    @PostMapping(value = "/search" )
+    @PostMapping(value = "/seckillGoods/search" )
     Result<List<SeckillGoods>> findList(@RequestBody(required = false) SeckillGoods seckillGoods);
 
     /***
@@ -48,7 +47,7 @@ public interface SeckillGoodsFeign {
      * @param id
      * @return
      */
-    @DeleteMapping(value = "/{id}" )
+    @DeleteMapping(value = "/seckillGoods/{id}" )
     Result delete(@PathVariable Long id);
 
     /***
@@ -57,7 +56,7 @@ public interface SeckillGoodsFeign {
      * @param id
      * @return
      */
-    @PutMapping(value="/{id}")
+    @PutMapping(value="/seckillGoods/{id}")
     Result update(@RequestBody SeckillGoods seckillGoods,@PathVariable Long id);
 
     /***
@@ -65,7 +64,7 @@ public interface SeckillGoodsFeign {
      * @param seckillGoods
      * @return
      */
-    @PostMapping
+    @PostMapping("/seckillGoods")
     Result add(@RequestBody SeckillGoods seckillGoods);
 
     /***
@@ -80,6 +79,6 @@ public interface SeckillGoodsFeign {
      * 查询SeckillGoods全部数据
      * @return
      */
-    @GetMapping
+    @GetMapping("/seckillGoods")
     Result<List<SeckillGoods>> findAll();
 }

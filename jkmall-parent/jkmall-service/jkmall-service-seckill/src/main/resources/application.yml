@@ -14,6 +14,9 @@ spring:
     password: guest #密码
   main:
     allow-bean-definition-overriding: true
+  redis:
+    host: 192.168.211.132
+    port: 6379
 eureka:
   client:
     service-url:

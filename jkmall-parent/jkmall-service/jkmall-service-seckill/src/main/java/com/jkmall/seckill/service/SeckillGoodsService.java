@@ -66,4 +66,6 @@ public interface SeckillGoodsService {
      * @return
      */
     List<SeckillGoods> findAll();
+
+    List<SeckillGoods> list(String timeSpace);
 }

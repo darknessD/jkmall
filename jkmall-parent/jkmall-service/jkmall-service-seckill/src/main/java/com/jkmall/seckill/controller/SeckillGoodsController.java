@@ -25,6 +25,12 @@ public class SeckillGoodsController {
     @Autowired
     private SeckillGoodsService seckillGoodsService;
 
+    @GetMapping("/list")
+    public Result<List<SeckillGoods>> list(String timeSpace){
+        List<SeckillGoods> seckillGoods = seckillGoodsService.list(timeSpace);
+        return new Result<>(true, StatusCode.OK, "Success", seckillGoods);
+    }
+
     /***
      * SeckillGoods分页条件搜索实现
      * @param seckillGoods

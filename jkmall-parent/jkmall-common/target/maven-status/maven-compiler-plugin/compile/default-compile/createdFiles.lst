@@ -1,3 +1,4 @@
+com\jchen\entity\DateUtil.class
 com\jchen\entity\PageResult.class
 com\jchen\entity\IdWorker.class
 com\jchen\entity\CacheKey.class

@@ -6,6 +6,7 @@ import com.jkmall.seckill.dao.SeckillGoodsMapper;
 import com.jkmall.seckill.pojo.SeckillGoods;
 import com.jkmall.seckill.service.SeckillGoodsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
@@ -23,6 +24,8 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
     @Autowired
     private SeckillGoodsMapper seckillGoodsMapper;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * SeckillGoods条件+分页查询
@@ -186,5 +189,10 @@ public class SeckillGoodsServiceImpl implements SeckillGoodsService {
     @Override
     public List<SeckillGoods> findAll() {
         return seckillGoodsMapper.selectAll();
+    }
+
+    @Override
+    public List<SeckillGoods> list(String timeSpace) {
+        return redisTemplate.boundHashOps(timeSpace).values();
     }
 }

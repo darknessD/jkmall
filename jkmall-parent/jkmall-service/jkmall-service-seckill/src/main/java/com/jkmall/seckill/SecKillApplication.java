@@ -10,7 +10,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication
 @EnableEurekaClient
-@EnableFeignClients
+@EnableFeignClients(basePackages = {"com.jkmall.seckill.feign"})
 @MapperScan(basePackages = {"com.jkmall.seckill.dao"})
 @EnableScheduling
 public class SecKillApplication {
