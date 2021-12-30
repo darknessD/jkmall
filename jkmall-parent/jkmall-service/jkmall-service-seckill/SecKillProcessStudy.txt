@@ -1,0 +1,11 @@
+1. 在Controller层传入客户要抢的商品ID和商品所属的时间节点，从Security Context获取到用户名，然后传给service层
+2. 在Service层中
+    a. 以防用户重复下单，在redis中设置一个username为key的自增键，每次请求来给这个username所属的key自增1，如果大于1的话就抛出异常
+    b. 封装一个抢单对象，然后放在Redis的list里，做一个排队
+3. 创建一个多线程生成订单的Async对象
+    a. 从Redis的排队List中取出抢单对象
+    b. 从Redis的防超卖List中取出一个ID， 如果为空就是卖完了，清理防超卖信息，抛出异常（在给Redis里导入秒杀商品的时候，为了防止超卖，按照商品的库存数量
+    创建同等数量的商品ID数组，然后放入Redis的list中）
+    c. 通过商品ID从Redis中取出秒杀商品的详细信息，然后生成订单存入Redis中
+    d. 给Redis中的该商品库存-1（该库存为publisher中存入）
+    e. 判断该商品是否还有库存，还有的话则更新商品的库存，没有的话将该商品从redis中清除

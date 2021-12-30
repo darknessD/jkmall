@@ -51,10 +51,6 @@ public class MultiThreadCreateOrder {
             //获取商品数据
             SeckillGoods goods = (SeckillGoods) redisTemplate.boundHashOps("SeckillGoods_" + time).get(id);
 
-            //如果没有库存，则直接抛出异常
-            if(goods==null || goods.getStockCount()<=0){
-                throw new RuntimeException("已售罄!");
-            }
             //如果有库存，则创建秒杀商品订单
             SeckillOrder seckillOrder = new SeckillOrder();
             seckillOrder.setId(idWorker.nextId());
