@@ -40,9 +40,28 @@ public class SecKillGoodsPusher {
             criteria.andNotIn("id", ids);
             List<SeckillGoods> seckillGoods = seckillGoodsMapper.selectByExample(example);
             for (SeckillGoods seckillGood: seckillGoods){
-
                 redisTemplate.boundHashOps(timeSpace).put(seckillGood.getId(), seckillGood);
+
+                //商品数据队列存储,防止高并发超卖
+                Long[] goodIds = pushIds(seckillGood.getStockCount(), seckillGood.getId());
+                redisTemplate.boundListOps("SeckillGoodsCountList_"+seckillGood.getId()).leftPushAll(goodIds);
+                //自增计数器
+                redisTemplate.boundHashOps("SeckillGoodsCount").increment(seckillGood.getId(),seckillGood.getStockCount());
             }
         }
+    }
+
+    /***
+     * 将商品ID存入到数组中
+     * @param len:长度
+     * @param id :值
+     * @return
+     */
+    public Long[] pushIds(int len,Long id){
+        Long[] ids = new Long[len];
+        for (int i = 0; i <ids.length ; i++) {
+            ids[i]=id;
+        }
+        return ids;
     }
 }

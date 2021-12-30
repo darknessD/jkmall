@@ -42,17 +42,9 @@ public interface SeckillOrderService {
      */
     void delete(Long id);
 
-    /***
-     * 修改SeckillOrder数据
-     * @param seckillOrder
-     */
     void update(SeckillOrder seckillOrder);
 
-    /***
-     * 新增SeckillOrder
-     * @param seckillOrder
-     */
-    void add(SeckillOrder seckillOrder);
+    Boolean add(Long id, String time, String username);
 
     /**
      * 根据ID查询SeckillOrder

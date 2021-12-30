@@ -2,14 +2,17 @@ package com.jkmall.seckill.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.jchen.entity.SeckillStatus;
 import com.jkmall.seckill.dao.SeckillOrderMapper;
 import com.jkmall.seckill.pojo.SeckillOrder;
 import com.jkmall.seckill.service.SeckillOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Date;
 import java.util.List;
 
 /****
@@ -23,6 +26,11 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     @Autowired
     private SeckillOrderMapper seckillOrderMapper;
 
+    @Autowired
+    private MultiThreadCreateOrder multiThreadCreateOrder;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * SeckillOrder条件+分页查询
@@ -144,13 +152,25 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         seckillOrderMapper.updateByPrimaryKey(seckillOrder);
     }
 
-    /**
-     * 增加SeckillOrder
-     * @param seckillOrder
-     */
     @Override
-    public void add(SeckillOrder seckillOrder){
-        seckillOrderMapper.insert(seckillOrder);
+    public Boolean add(Long id, String time, String username){
+        //防止重复提交
+        Long userQueueCount = redisTemplate.boundHashOps("userQueueCount").increment(username, 1);
+
+        if(userQueueCount > 1){
+            throw new RuntimeException("Multi Submit");
+        }
+
+        //排队信息封装
+        SeckillStatus seckillStatus = new SeckillStatus(username, new Date(),1, id,time);
+
+        //将秒杀抢单信息存入到Redis中,这里采用List方式存储,List本身是一个队列
+        redisTemplate.boundListOps("SeckillOrderQueue").leftPush(seckillStatus);
+
+        //将抢单状态存入到Redis中
+        redisTemplate.boundHashOps("UserQueueStatus").put(username,seckillStatus);
+        multiThreadCreateOrder.createOrder();
+        return true;
     }
 
     /**

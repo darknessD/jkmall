@@ -1,15 +1,20 @@
 package com.jkmall.seckill.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageInfo;
 import com.jchen.entity.Result;
 import com.jchen.entity.StatusCode;
 import com.jkmall.seckill.pojo.SeckillOrder;
 import com.jkmall.seckill.service.SeckillOrderService;
+import com.jkmall.seckill.util.JwtUtil;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /****
  * @Author:shenkunlin
@@ -106,17 +111,26 @@ public class SeckillOrderController {
         return new Result(true,StatusCode.OK,"修改成功");
     }
 
-    /***
-     * 新增SeckillOrder数据
-     * @param seckillOrder
-     * @return
-     */
-    @ApiOperation(value = "SeckillOrder添加",notes = "添加SeckillOrder方法详情",tags = {"SeckillOrderController"})
     @PostMapping
-    public Result add(@RequestBody  @ApiParam(name = "SeckillOrder对象",value = "传入JSON数据",required = true) SeckillOrder seckillOrder){
-        //调用SeckillOrderService实现添加SeckillOrder
-        seckillOrderService.add(seckillOrder);
-        return new Result(true,StatusCode.OK,"添加成功");
+    public Result add(String time, long id){
+        try {
+            //用户名
+            OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+            String claims = JwtUtil.decode(details.getTokenValue());
+            Map<String, Object> map = JSON.parseObject(claims, Map.class);
+            String username = (String) map.get("username");
+
+            //调用Service增加订单
+            Boolean bo = seckillOrderService.add(id, time, username);
+
+            if(bo){
+                //抢单成功
+                return new Result(true,StatusCode.OK,"正在排队");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Result(true,StatusCode.ERROR,"服务器繁忙，请稍后再试");
     }
 
     /***

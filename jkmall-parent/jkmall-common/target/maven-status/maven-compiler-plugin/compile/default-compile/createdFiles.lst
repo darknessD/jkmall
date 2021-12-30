@@ -8,6 +8,7 @@ com\jchen\entity\ChineseUtils.class
 com\jchen\entity\Result.class
 com\jchen\entity\BCrypt.class
 com\jchen\entity\Page.class
+com\jchen\entity\SeckillStatus.class
 com\jchen\interceptor\FeignInterceptor.class
 com\jchen\entity\HttpClient.class
 com\jchen\entity\StatusCode.class
