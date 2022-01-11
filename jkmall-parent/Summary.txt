@@ -1,0 +1,207 @@
+1. OpenResty
+在OpenResty中内置了Nginx，配合Lua脚本进行多级缓存
+    A. 修改/usr/local/openresty/nginx/conf/nginx.conf文件： 添加头信息，和 location信息
+        server {
+            listen       80;
+            server_name  localhost;
+
+            location /read_content {
+                content_by_lua_file /root/lua/read_content.lua;
+            }
+        }
+
+    B. Lua内容如下：
+        ngx.header.content_type="application/json;charset=utf8"
+        local uri_args = ngx.req.get_uri_args();
+        local id = uri_args["id"];
+        --获取本地缓存
+        local cache_ngx = ngx.shared.dis_cache;
+        --根据ID 获取本地缓存数据
+        local contentCache = cache_ngx:get('content_cache_'..id);
+
+        if contentCache == "" or contentCache == nil then
+            local redis = require("resty.redis");
+            local red = redis:new()
+            red:set_timeout(2000)
+            red:connect("192.168.211.132", 6379)
+            local rescontent=red:get("content_"..id);
+
+            if ngx.null == rescontent then
+                local cjson = require("cjson");
+                local mysql = require("resty.mysql");
+                local db = mysql:new();
+                db:set_timeout(2000)
+                local props = {
+                    host = "192.168.211.132",
+                    port = 3306,
+                    database = "changgou_content",
+                    user = "root",
+                    password = "123456"
+                }
+                local res = db:connect(props);
+                local select_sql = "select url,pic from tb_content where status ='1' and category_id="..id.." order by sort_order";
+                res = db:query(select_sql);
+                local responsejson = cjson.encode(res);
+                red:set("content_"..id,responsejson);
+                ngx.say(responsejson);
+                db:close()
+            else
+                cache_ngx:set('content_cache_'..id, rescontent, 10*60);
+                ngx.say(rescontent)
+            end
+            red:close()
+        else
+            ngx.say(contentCache)
+        end
+    C. Nginx限流
+        有两种方式，一种是控制速率， 另一种是控制并发连接数
+        * 在config的http括号中加入如下配置：
+          限流设置（每秒10个request）
+          limit_req_zone $binary_remote_addr zone=contentRateLimit:10m rate=2r/s;
+        * 在config的http括号中加入如下配置：
+          limit_conn_zone $binary_remote_addr zone=addr:10m;  表示限制根据用户的IP地址来显示，设置存储地址为的内存大小10M
+          limit_conn addr 2;   表示 同一个地址只允许连接2次
+
+2. Canal
+   canal模拟mysql slave的交互协议，伪装自己为mysql slave，向mysql master发送dump协议
+   mysql master收到dump请求，开始推送binary log给slave(也就是canal)
+   canal解析binary log对象(原始为byte流)
+
+   操作步骤：
+   a. 连接到mysql中,并修改/etc/mysql/mysql.conf.d/mysqld.cnf 需要开启主 从模式，开启binlog模式
+        docker exec -it mysql /bin/bash
+        cd /etc/mysql/mysql.conf.d
+        vi mysqld.cnf
+   b. 修改mysqld.cnf配置文件，添加如下配置
+        log-bin/var/lib/mysql/mysql-bin
+        server-id=12345
+   c. 创建canal账号并重启mysql
+   d. 安装Canal并且修改配置监听mqsql binlog， 然后重启canal
+   e. 构建canal微服务，并且在yml中配置canal的host和端口
+   f. 创建class用来监听DB的改动
+        @CanalEventListener
+        public class CanalDataEventListener {
+
+            /*** 增加数据监听*/
+            @InsertListenPoint
+            public void onEventInsert(CanalEntry.EventType eventType, CanalEntry.RowData rowData) {
+                rowData.getAfterColumnsList().forEach((c) -> System.out.println("By--Annotation: " + c.getName() + " ::   " + c.getValue()));
+            }
+        }
+3. 使用Elastic Search做搜索
+    a. 安装elastic search 和head可视化插件。 mysql里的库，这里叫index, mysql里的record，在这里就是document
+    b. 安装Kibana， ELK就是elasticsearch+logstash+kibana
+    c. es里的最小数据单位就是document， 每一条document其实就是一个json
+    d. IK 分词器： ik_smart, ik_max_word
+       自己需要的词，可以加入分词器的配置
+    e. Rest 风格命令来操作es
+       使用PUT来创建或者更新数据(PUT /jeremy/user/1   /索引名/类型/索引ID)
+       使用POST的_update也可以更新数据，更建议使用这个，漏填数据的话不会导致字段丢失
+       使用GET来查询 get /jeremy/jeremya/_search?q=Jeremy:Karena（因为Jeremy是keyword，所以分词器不会生效）
+       get jeremy/jeremya/_search
+       {
+         "query":{
+           "match": {
+             "Jeremy": "Karena"
+           }
+         }
+       }
+       在请求体重加入_source用来选择需要展示的字段，就像sql的select XXX
+       get jeremy/jeremya/_search
+       {
+         "query":{
+           "match": {
+             "Jeremy": "Karen"
+           }
+         },
+         "_source": ["name"]
+       }
+       在请求体中加入sort来排序
+       get jeremy/jeremya/_search
+       {
+         "query":{
+           "match": {
+             "Jeremy": "Karen"
+           }
+         },
+         "sort":{
+           "age":{
+             "order" : "asc"
+           }
+         }
+       }
+       在请求体中加入from和size用来分页，和mysql中的limit一样
+       get jeremy/jeremya/_search
+       {
+         "query":{
+           "match": {
+             "Jeremy": "Karen"
+           }
+         },
+         "from":0,
+         "size":2
+       }
+       布尔值查询，使用must命令，就像是sql中的and操作，must里的条件都要成立
+       使用should命令，等于or
+       可以使用filter命令进行数据的过滤，筛选
+
+       精确查询：刚才上面的match命令会使用到分词器解析，所以不是精确查询，精确需要使用term
+       关于term和match
+       拿A去B里匹配，A能分词，B也能分词。term不会将A分词，match会将A分词，存储数据类型keyword不会将B分词，text会将B分词。
+
+         可以看到上面用term方式查找，没有结果，而用match方式查找，能查找到“吕蒙”和“吕布”两个结果
+
+         term是不分词（不拆分搜索字）查找目标字段中是否有要查找的文字，也就是完整查找“吕蒙”两个字，而name这个字段用的是text类型存储的，text类型数据默认是分词的，也就是elasticsearch会将name分词后（分成“吕”和“蒙”）再存储，这时候拿完整的搜索字“吕蒙”去存储的“吕”、“蒙”里找肯定是找不到的。
+
+         match是分词（拆分搜索字）查找目标字段，也就是说会先将要查找的搜索子“吕蒙”拆成“吕”和“蒙”，再分别去name里找“吕”，如果没有找到“吕”，还会去找“蒙”，而存储的数据里，text已经将“吕蒙”和“吕布”都分词成了“吕”，“蒙”，“吕”，“布”存储了，所以光通过一个“吕”字就能找到两条结果。
+
+         这里要区分搜索词的分词，以及字段存储的分词。拿A去B里匹配，A能分词，B也能分词。term不会将A分词，match会将A分词。
+
+         既然name的类型，存储的时候就是分词的，那能不能在存储的时候不分词了，可以用将text类型改成keyword类型
+
+    f. 与spring data elastic search 整合
+       @Document 作用在类，标记实体类为文档对象，一般有四个属性
+       indexName：对应索引库名称
+       type：对应在索引库中的类型
+       shards：分片数量，默认5
+       replicas：副本数量，默认1
+       @Id 作用在成员变量，标记一个字段作为id主键
+       @Field 作用在成员变量，标记为文档的字段，并指定字段映射属性：
+       type：字段类型，取值是枚举：FieldType
+       index：是否索引，布尔类型，默认是true
+       store：是否存储，布尔类型，默认是false
+       analyzer：分词器名称：ik_max_word
+
+       使用ElasticsearchTemplate或者mapper来操作es
+       新增索引：esTemplate.createIndex(Item.class)
+       新增映射：esTemplate.putMapping(Item.class)
+       删除索引：esTemplate.deleteIndex("item")
+       新增文档：Item item = new Item();
+                item.setXXX(XXX);
+                itemRepository.save(item)
+       基本查询：itemRepository.findById(id)
+                itemRepository.findAll()
+
+       自定义查询：
+       //创建查询对象
+       NativeSearchQueryBuilder nativeSearchQueryBuilder = new NativeSearchQueryBuilder();
+       nativeSearchQueryBuilder.withQuery(QueryBuilders.matchQuery("name", keywords));
+       //构建查询语句
+       NativeSearchQuery searchQuery = nativeSearchQueryBuilder.build();
+       AggregatedPage<SkuInfo> skuPage = elasticsearchTemplate.queryForPage(searchQuery, SkuInfo.class);
+       //或者构建page参数
+       nativeSearchQueryBuilder.withPageable(PageRequest.of(page, size))
+       Page<SkuInfo> page = elasticsearchTemplate.search(nativeSearchQueryBuilder.build())
+       //排序
+       nativeSearchQueryBuilder.withSort(SortBuilders.filedSort("price").order(SortOrder.DESC))
+       Page<SkuInfo> page = elasticsearchTemplate.search(nativeSearchQueryBuilder.build())
+
+       聚合为桶
+       nativeSearchQueryBuilder.addAggregation(AggregationBuilders.terms("skuCategoryGroup").field("categoryName"));
+       AggregatedPage<SkuInfo> skuPage = elasticsearchTemplate.queryForPage(searchQuery, SkuInfo.class);
+       //获取分组结果
+       StringTerms terms = (StringTerms) skuPage.getAggregation("skuCategoryGroup");
+       List<String> categories = terms.getBuckets().stream().map(b -> b.getKeyAsString()).collect(Collectors.toList());
+
+
+
