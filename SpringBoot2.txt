@@ -1,0 +1,95 @@
+1. Configuration注解
+	a. 在注解中有一个属性 ProxyBeanMethods = ture or false. True是full模式，false是lite模式。 true的话再调用创建bean的方法，得到的bean和容器中的是同一个
+2. Import注解 eg: @Import(User.class)  调用类的无参构造器，在容器中的名字是全类名
+3. Conditional注解，他下面有很多子注解比如conditionOnBean  conditionOnMissingBean
+4. ImportResource注解，可以导入已有的spring的bean xml，就不用了都写成@Bean的模式
+5. 读配置文件  @ConfigurationProperties + @Component   or   @ConfigurationProperties + @EnableConfigurationProperties
+6. SpringBoot核心启动类注解@SpringBootApplication,他有三个子注解
+	@SpringBootConfiguration本质就是一个Configuration
+	@ComponentScan是一个包扫描
+	@EnableAutoConfiguration在这个下面有一个@AutoConfigurationPackage 和 @Import({AutoConfigurationImportSelector.class})
+	
+		a. @AutoConfigurationPackage是批量导入主程序所在包下的所有组件
+		b. 在Selector中获取所有需要导入的候选组件（配置类）。在方法中读取所有的META-INF/spring.factories文件
+		主要是spring-boot-autoconfigure-2.1.8.RELEASE.jar!\META-INF\spring.factories，在这个文件下有springboot需要的所，有自动配置文件
+		虽然127个配置类都会被扫出来，但是得益于springboot自动配置类上的条件加载注解，比如@ConditionalOnClass({RabbitTemplate.class, Channel.class})，
+		如果我们没有导入rabbit相关依赖的话，就在类路径里找不到rabbitTemplate，那么这个自动配置类也就不会被加载了
+		
+		Spring自动配置流程：首先读出所有的自动配置类，然后按照条件生成这些bean（@Conditional注解），可以自己修改配置文件或者重新定义这些bean
+		
+7. SpringBoot传参相关的注解
+@PathVariable获取路径中的变量，使用@PathVariable Map<String, String> pv可以吧路径中的所有参数都放进map里
+@RequestHeader放在参数里  如果带key的话就是拿到那一个，如果也是map的话就是拿到所有，同上
+@RequestPara放在参数里 如果带key的话就是拿到那一个，如果也是map的话就是拿到所有，同上
+@RequestBody  用于Post提交的form表单或者json
+
+8. 拦截器
+实现HandlerInterceptor，然后在configuration文件里注册
+
+9. 文件上床
+@RequestPart MultipartFile photo
+photo.transferTo(new File(xxx));
+
+10. 错误处理
+springboot默认的错误处理就是浏览器客户端返回一个html，其他的返回一个json
+
+自定义异常处理：@ControllerAdvice + @ExceptionHandler({xxxException.class ...})
+
+11. Web原生组件注入
+
+12. 定制化功能
+	a. 使用@Bean来注册自己需要的bean，因为自动配置的很多bean都是有@ConditionalOnMissingBean注解，就是当容器里没有的时候才会配置
+	b. 修改yml配置文件
+	c. @Configuration + extends WebMvcConfigure
+	d. @Configuration + @EnableWebMvc 完全接管spring mvc
+	
+13. 数据访问
+默认的数据连接池是Hikari，可以自己定义一个Druid数据源在configruation里return一个
+导入了Druid starter后只需要在yml里配置数据源相关的配置就好，其他的配置都是和监控相关的
+
+14. 集成mybatis
+配置文件模式，注解模式， 混合模式
+	最佳实战：
+	a. 引入mybatis-starter
+	b. 配置yml并指定mapper location位置
+	c. 编写mapper接口并架上@mapper
+	d. 简单方法用注解， 复杂方法使用xml
+	
+15. 高级特性
+自定义一个starter：
+	a.定义一个启动项目，这里没有代码，只有在pom里写一些dependency，比如autoconfigure项目
+	b.创建一个autoconfigure项目，在这里编写autoconfig的java文件，还有spring.factories文件
+	c.引入starter并且写yml
+	
+16. Springboot的启动过程
+	a. 创建spring application
+	保存一些信息
+	判断当前应用类型，ClassUtils or Servlet
+	去spring.factories文件里找SpringContextInitilizer
+	去spring.factories文件里找SpringApplicationRunListener
+	b. run spring application
+	stop watch 记录应用启动时间
+	创建引导上下文
+		获取到所有的bootstrapers，执行每个initialize方法
+	让当前应用变成headless模式
+	获取所有run listener运行监听器（去spring.factories里找SpringApplicationRunListener）
+		遍历所有的listner然后调用starting方法，相当于通知对他感兴趣的，项目正在启动
+	保存命令行参数
+	准备运行时环境
+		返回或创建基础环境信息
+		配置环境信息
+		通知所有的监听器，当前环境准备完成
+	创建IOC容器ApplicationContext
+		根据当前项目类型创建容器
+	准备容器的基本信息
+		保存environment信息
+		IOC容器后置处理流程
+		applyinitilizer应用初始化器，遍历上面所有的initializer并执行initial方法，来对IOC容器进行扩展
+		遍历所有listerns调用contextPrepared
+		遍历所有listener调用contextLoaded
+	刷新IOC容器
+		创建所有容器中的组件（spring注解）
+	所有监听器调用started
+	调用所有的runners
+	
+https://www.yuque.com/atguigu/springboot/rmxq85

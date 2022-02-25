@@ -7,8 +7,16 @@
 
             location /read_content {
                 content_by_lua_file /root/lua/read_content.lua;
+				!--也可以反向代理到target地址--
+				proxy_pass http://127.0.0.1:10000
             }
         }
+		在本地模拟的流程就是 本地->VM nginx->本地的10000端口
+		还可以配置负载均衡：在http块里加 upstream jkmall{
+												server 192.168.3.3:8088;
+												//此处可以加多台server
+											}
+		然后在location 块里proxy_pass http://jkmall
 
     B. Lua内容如下：
         ngx.header.content_type="application/json;charset=utf8"
@@ -106,6 +114,24 @@
            }
          }
        }
+	   使用match_phrase：来做短语查询, 这里不会把Karena good分词，es中所有包含这个value的record都会被检索出来
+	   get jeremy/jeremya/_search
+       {
+         "query":{
+           "match_phrase": {
+             "Jeremy": "Karena good"
+           }
+         }
+       }
+	   使用keyword：来做短语查询, 这里不会把Karena good分词，es中所有完全等于这个value的record都会被检索出来
+	   get jeremy/jeremya/_search
+       {
+         "query":{
+           "match": {
+             "Jeremy.keyword": "Karena good"
+           }
+         }
+       }
        在请求体重加入_source用来选择需要展示的字段，就像sql的select XXX
        get jeremy/jeremya/_search
        {
@@ -145,7 +171,8 @@
        使用should命令，等于or
        可以使用filter命令进行数据的过滤，筛选
 
-       精确查询：刚才上面的match命令会使用到分词器解析，所以不是精确查询，精确需要使用term
+       精确查询：刚才上面的match命令会使用到分词器解析，所以不是精确查询，精确需要使用term。
+	   总结：查非text字段时都用term，查text就用match 
        关于term和match
        拿A去B里匹配，A能分词，B也能分词。term不会将A分词，match会将A分词，存储数据类型keyword不会将B分词，text会将B分词。
 
@@ -203,5 +230,226 @@
        StringTerms terms = (StringTerms) skuPage.getAggregation("skuCategoryGroup");
        List<String> categories = terms.getBuckets().stream().map(b -> b.getKeyAsString()).collect(Collectors.toList());
 
+4. 网关与JWT
 
+5. 分布式锁问题（gulimall）
+缓存穿透：用户访问一个在数据库中永远不存在的value，这样就能绕过缓存打在数据库上，解决方案是给redis存一个0或者boolean
+缓存雪崩：redis中大量的key同时过期， 解决方案是设置过期时间
+缓存击穿：redis中某个正好过期的key被大并发访问， 解决方案是加锁
 
+加锁解决缓存击穿
+	a. 如果是单节点部署的话，可以使用sychonized本地锁来保证只有一个线程访问数据库， 如果只是为了降低访问数据库的次数，那么
+	   流程：获取缓存->没有命中的话访问DB（给访问DB的方法加锁）->在访问DB的方法里给redis放入缓存->释放锁返回数据
+	b. 分布式的话需要使用分布式锁
+	   在进入查DB的方法后，使用setnx方法给redis加锁，同时设定锁的过期时间（不设定过期时间的话，就可能出现程序拿到锁，但是没
+	   完成操作就断电或者其他异常，导致锁没法移除）。查完DB之后需要移除redis中的锁，这里需要给锁也加上uuid，这样不会删掉别人的锁。
+	   这里还有问题，就是要把从redis读锁，判断，删锁做成一个原子操作，这样能避免删掉别人的锁，这里调用lua脚本来做判断和删除。
+	   加锁和解锁都要保证原子操作，加锁用setnx解锁用lua脚本
+	c. 使用redisson分布式锁框架来解决分布式锁的问题，这里去lock的时候如果没有lock住就会一直在这里阻塞式等待，直到其他线程释放锁。而我们
+	   上面手动的分布式锁是使用自旋递归的方式来执行
+	   * 使用redisson的话，不必担心业务时间长，默认的过期时间还会自动续期
+	   * 不需要手动解锁，业务结束后就会自动清掉
+	d. 最佳实战：在使用lock.lock()方法时，还是最好给lock方法里传一个过期时间比如lock.lock(10, TimeUnit.SECONDS)，可以把时间给大一点来保证业务
+	   能够完成。如果不传时间的话，就会有一个watchdog机制，一直跑定时任务给当前线程的锁续期
+	   Rlock lock = redisson.getLock("myLock");
+	   lock.lock(10, TimeUnit.SECONDS);
+	   try{
+			System.out.println("执行业务");
+			Thread.sleep(3000);
+	   }catch(Exception e){
+			.....
+	   }final{
+			lock.unLock();
+	   }
+	e. 可以获取读写锁RReadWriteLock lock = redisson.getReadWriteLock("myLock")
+		Rlock rlock = lock.writeLock();//写锁	写锁是排他锁
+		Rlock rlock = lock.readLock();//读锁   读锁与读锁间不互斥，但是与写锁互斥
+	f. 可以获取一个信号量Rsemaphere park = redisson.getSemaphore("park");
+		park.acquire() //获取一个   这是一个阻塞式等待，没有获取到一直在等待直到能获取到
+		park.release() //释放一个
+		需要在redis中给park一个初始的值
+	g.  缓存一致性问题，有两种解决方案。双写模式和失效模式
+
+6. 压力测试
+使用Jmeter进行压测，然后调整对程序调优
+
+JVM模型：堆， 方法区， 虚拟机栈， 本地方法栈， 程序计数器
+堆是主要放对象的地方，堆分为新生代和老年代，新的对象来，先放入新生代的eden区，放不下的话做一次minor GC，还放不下的话就放到老年代，老年代放不下的话
+做一次FullGC，还是放不下的话就报OOM内存溢出。第一次在eden区minorGC会把幸存的对象放在幸存者区，等到15岁时候移到老年区
+
+使用Jconsole和JvisualVM（推荐使用）来进行调优
+
+	
+7. Spring Cache
+	@Cacheable
+	以下都是更新缓存用的
+	@CacheEvick失效模式
+	@CachePut双写模式
+	a.解决缓存问题：
+	  *缓存穿透：缓存空数据来解决，在yaml中配置cache-null-values: true
+	  *缓存击穿：使用加锁来解决（在@Cacheable注解里，有一个sync=true属性，加上以后方法读缓存和数据库就会变成一个加锁的方法）
+	  *缓存雪崩：指定过期时间或者永久不过期，永久的话就要注意缓存一致性问题
+	  以上都是读模式，写模式的话：
+	  *使用读写锁来保证不会读到脏数据
+	  *使用canal监控数据来更新缓存
+	  *写多的系统就直接读数据库
+	
+	总结： 常规数据（读多写少，即时性一致性要求不高），完全可以使用spring cache来操作
+8. 检索功能
+
+9. 异步与线程池
+启动新线程的方式有实现runnable和继承thread。以上两种都是没有返回值的，如果想有返回值就需要实现一个callable接口，然后用futureTask包装，最后传给thread构造方法，
+但是想要获取返回值的话，整个方法执行就变成了阻塞的执行。推荐使用线程池，不会耗尽系统的资源
+
+	a. 创建线程池的方式
+	   使用Executors或者直接new一个ThreadPoolExecutor， 他有七大参数
+	   corePoolSize：核心线程数，只要线程池不销毁，他就一直在
+	   maximumPoolSize：最大线程数量
+	   keepAliveTime：存活时间。当先线程数量大于核心数量。释放空闲线程，当空闲时间大于这个时间。留下核心线程大小数的线程
+	   BlockingQueue<Runnable> workQueue: 如果任务有很多，就会把多余的任务放在队列里，只要有空闲线程，就去取出任务执行
+	   threadFactory：创建线程的共产
+	   handler：如果队列满了，按照指定的拒绝策略
+	   
+	   工作顺序
+	   创建好线程池，准备核心线程->新任务进来，放在core里执行->core满了的话就把任务放在阻塞队列里->阻塞队列也满了的话就开新的线程，开到max——>max也满了就拒绝了
+	   
+	b. CompletableFuture异步编排
+	   CompletableFuture.runAsync(Runnable runnable, Executor executor);无返回值的
+	   CompletableFuture.supplyAsync(Supplier<U> supplier, Executor executor)有返回值的
+	   
+	   线程串行化
+	   thenRun(Runnable runnable)接着上一个线程执行
+	   thenRunAsync(Runnable runnable)新起一个线程执行
+	   可以接受上一个的参数
+	   thenAccept(Consumer<T> consumer)
+	   thenAcceptAsync(Consumer<T> consumer)
+	   可以接受上一个的参数且自己返回数据
+	   thenApply(Function fn)
+	   thenApplyAsync(Function fn)
+	   
+	   eg: 在商品详情页加载的时候需要5个异步的service来获取商品的详细信息
+	   通过skuid查询sku信息
+	   通过sku信息里的spuid查询spu介绍，spu销售属性组合，spu规格参数
+	   通过skuid查sku图片
+	   所以第2,3,4的service都要在第一个的基础上，比如第一个CompletableFuture infoFuture
+	   infoFuture.thenAcceptAsync((res)->{}, excutor)
+	   最后使用一个allOf(future...).get()来阻塞，等待所有执行完
+	   
+10. 认证
+
+11. Rabbit MQ
+
+	a. Publisher消息生产者。 exchange交换机，负责接收消息，然后把消息发给队列。Queue是队列，负责存储消息。Exchange和Queue之间有binding关系
+	Consumer是负责接收消息的消费者
+	
+	b. Exchange的类型：Direct, Fanout, Topic, Headers
+	Direct Exchange: 单播模式，点对点，只会发给给定的队列
+	Fanout Exchange: 广播模式，不处理路由键，直接把消息发给和他binding的所有队列，无论binding时候指定的路由键是什么或者发送时候带的路由键是什么（发的时候不写也可以）
+	Topic Exchange：广播模式， 只给路由键匹配的队列发
+	路由键需要在exchange里创建binding的时候指定
+	
+	c. 整合springboot
+	引入rabbit amqp的starter， 配置yml文件，在主类enableRabbit，在config里声明exchange，queue， bingding
+	如果想要给mq里发送对象，那么这个对象一定要实现序列化接口。也可以给spring容器中配置一个json converter，这样就能把object转json
+	接收消息：在一个spring容器托管的类里的方法上加
+	@RabbitListner(queues={"queuename"})
+	public receiveMessage(Message message, User user, Channe channel)
+
+	d. 可以有多个人监听消息，比如订单服务被多节点部署，但是最终只能有一个节点消费到消息
+	e. @RabbitListner可以用在类和方法用来说明监听哪个队列  @RabbitHandler只能用在方法上，来重载区分不同的消息
+	
+	f. Rabbit MQ消息确认机制-可靠抵达
+	消息生产者这端的话，需要设置一个confirmCallback和returnCallback，第一个是消息成功到broker就会执行，第二个是发送给queue失败执行
+	@Configuration
+	public class MQConfig{
+	
+	@Autowired
+	RabbitTemplate template;
+	
+	@Bean
+	public XX{
+	}
+	
+	@PostConstruct
+	public void updateTemplate(){
+		template.setConfirmCallback();
+	}
+	
+	}
+	在上面这个类构造完成后，方法会被调用来设置callback方法
+	
+	消息消费端的话，使用ack消息确认机制
+	
+12. 使用Feign调用的问题
+使用Feign进行远程调用的话，会新起一个request同时也会丢失掉请求头，所以这里需要新写一个intercptor来加上header。
+
+因为FeignInterceptor里拿request是从threadlocal里拿的，所以一旦将feign调用放在新的线程里执行的话，就不能获取到threadlocal里的消息了
+
+13. 接口幂等性
+	接口被调用多次和调用一次的结果是一样的。比如有些场景网络不好，用户不停重复点击提交，或者feign重试调用
+
+	解决方案：
+	a. Token机制： 在redis也存一份token，用过就删掉
+	b. 各种锁机制
+	
+	在商城中，我们在给订单确认页返回OrderConfirmVO的时候就生成一个令牌，存在redis中然后给页面也返回一个。redis中的key使用当前用户的id。
+	在用户提交订单时，我们需要校验令牌对比令牌然后删除令牌，这里必须要保证原子性。所以在这里对比和删令牌我们使用lua脚本。因为redis是单线程，所以
+	我们不用担心线程安全问题，只有lua执行结果是1的话，我们才会继续执行订单操作
+	
+14. 分布式事务
+	ACID:原子性， 一致性， 隔离性， 持久性
+	事务的隔离级别：
+	Read uncommited: 读未提交，可能会读到别的事务未提交的数据，脏读
+	Read commited: 读已提交，这是oracle的默认. 多次读取会有不一样的结果，此现象是不可重复度
+	Repeatable read: 可重复读， 这是mysql的默认， 在一个事务里，每次select的结果是一样的
+	
+	事务的传播行为：
+	Required, Requires_new
+	@Transactional
+	public void a(){
+		b();沿用a的事务
+		c();新起一个事务
+	}
+	
+	@Transactional(propagation=Propagation.REQUIRED)
+	public void b()
+	
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void c()
+	
+	如果a, b, c都在一个service里，b和c不管做了什么设置，都没有用。同一对象内事务方法互调默认失效，原因是绕过了代理对象
+	解决方案：使用代理对象来调事务方法。@EnableAspectJAutoProxy(exposeProxy=true)
+	(XXXServiceImpl)AopContext.currentProxy();
+	
+	CAP定理：一致性可用性分区一致性。系统一般是cp或者ap
+	
+	分布式事务解决方案：
+	a. 2PC模式
+	b. 柔性模式 TCC事务补偿方案
+	c. Seata 
+	TC：事务协调者： 负责全局事务控制
+	TM: 事务管理器： 负责开启一个大事务
+	RM: 资源管理器： 子系统的事务管理器
+	
+	Seata使用步骤：
+	a. 创建undo log表，每个微服务都需要
+	b. 安装一个seata服务器，就是tc
+	c. 整合
+		1). 导入seata依赖
+		2). 启动seata服务器
+		3). 配置seata的registry.conf,指定nacos注册中心，指定file.conf他里面都是seata的配置
+		4). 在分布式大事务的入口使用@GlobalTransactionnal，在每一个小事务上加@Transactional
+		5). 配置一个代理数据源，包装上一个原有的数据源。给每一个服务都加上这个数据源
+		6). 每个微服务都在resource下面加上registry.conf  file.conf
+	Seata的AT模式不适合大并发场景
+	
+15. 使用MQ 死信队列
+消息producer给一个延时队列发消息，这个队列不被任何consumer监听，给这个queue设置过期时间，过期后直接发给一个死信exchange，exchange再发给一个队列，这个队列被监听。
+从而能实现定时任务的效果
+
+在项目中的设计，一般使用Topic模式，有一台exchange绑定多个queue，bingding关系使用不同的routing key，producer发送一条带routing key的消息，exchange把他转给
+所有满足routing条件的queue
+
+详细设计参照课件中的设计，只需要一个exchange，同时用做接收消息的exchange和死信队列消息过期后发给的exchange
+
+使用延时队列模拟定时任务检查库存是否需要解锁，从而实现最终一致性

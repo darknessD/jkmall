@@ -1,0 +1,168 @@
+1. 多表查询（等值连接非等值连接， 自连接非自连接， 内连接外连接）
+	a. 内连接：只会把满足连接条件的数据展示出来。使用where语句加连接条件，或者inner join还有join都可以实现
+	b. 左外连接：除了满足连接条件的，会把左表中不满足条件的也展示出来
+	c. 右外连接: 除了满足连接条件的，会把右表中不满足条件的也展示出来
+	d. 全外连接：除了满足连接条件的，会把左右表中不满足条件的也展示出来
+	（理解：执行的顺序应该是先join数据，然后再用where语句过滤）
+2. Union关键字：合并查询结果（union去重  union不去重）
+
+3. 单行函数：对检索出来的数据进行操作
+	分类：数据函数，字符串，日期时间，流程控制，加密解密
+	
+	日期函数的格式化与解析
+	a. 格式化是日期toString
+	b. 解析是String to日期
+	
+4. 聚合函数
+	a. Count(1) Conut(*) Count(Filed)具体字段这个不要用，这个数量是不包含null的
+	如果是myisam引擎的话都是一样的，如果是innodb的话 count(*) = count(1) > count(filed)
+	
+	b. group by: 没有出现在group by后面的字段，不能加在select后面。因为gourp by某一个字段后，这个一个字段只会显示一条数据
+	
+	c. having: having的过滤条件是group by执行之后才生效的。 结论：过滤条件中有聚合函数时候，必须生命在having中，当条件中没有聚合函数时，两个都可以
+	但是建议声明在where中
+	
+5. 子查询
+	a. 单行子查询vs多行子查询（内查询返回的记录数）
+	
+	多行比较操作符  in any all some
+	
+	b. 相关子查询vs不相关子查询
+	相关子查询就是子查询每次的结果都会随着主查询的行数变化而变化。会把外查询的字段传入内查询中
+	ag: 查询员工工资大于该员工所在部门平均工资的员工的id 姓名和工资
+	方式一(相关子查询)
+	select id, name, salary 
+	from Employee e1
+	where salary > (
+		select avg(salary) from Employee e2 where e2.departmentid = e1.departmentid
+	)
+	其实就是遍历主查询的数据，然后把每一条数据的某一个filed送进子查询
+	
+	方式二
+	select id, name, salary 
+	from Employee e, (
+		select departmentid, avg(salary) avy_sal from Employee group by departmentid
+	) avg_table
+	where e.departmentid = avg_table.departmentid and e.salary > avg_table.avy_sal 
+	
+	c. Exists   Not Exists关键字
+	Exists + 子查询   如果传进来的值在exists子查询中匹配成功就返回true，如果没匹配就继续匹配，最后还是没有的话就返回false
+	
+6. Truncate是清空表中的数据但是保留表结构。和delete from一样但是truncate执行后不能使用rollback回滚了
+
+7. 数据类型
+
+	整数类型（int tinyint bigint），浮点数类型(float double)， 定点数类型(decimal)，日期类型(date, time, datetime)
+	
+	a. 日期类型：
+	关于Datetime和Timestamp：他们基本上是一样的，但是Datetime因为是8字节而timestamp是4字节，所以datetime表示的范围更广
+	而且这两种类型，不管sql插入的是string还是int，只要满足格式，都可以成功插入
+	
+	Timestamp  select和保存的时候是算时区的
+	
+	b. Decimal：定义时候必须要指定长度和小数后的位数，不指定的话就是（10,0）   如果长度超出范围了，就把整数部分和小数分开存储
+	
+8. 约束
+
+	a.not null, unique(允许出现多个null), primary key, foreign key, check, default
+	
+	b.如果想要删除唯一约束，必须要先删除唯一索引
+	
+	c.Auto_increament 必须作用在主键约束或者唯一性约束的字段上，且字段必须是int的
+	
+
+9. sql的执行流程
+sql->缓存->分析器->优化器—>执行器->结果集
+可以使用show profiles来显示当前session的所有操作
+show profile for query 8展示id为8的query操作的细节
+
+10. 存储引擎
+比如InnoDB和MyIsam。 这个引擎是表级别的，InnoDB支持事务和分布式事务还有外键，这也是默认的引擎。除此之外，innoDB还支持行级锁
+
+11. 索引：帮助mysql高效获取数据的数据结构
+在这里存储有一个页的概念，一页就是16kb的大小，如果数据很多就会分成多个页存储。如果某个字段是主键的话，数据库就会把所有数据行根据这个主键排序，然后把每个页的主键的最小值
+拿出来做一个单链表   （最小值+页码）  如果进来一个查找的话，就会先是进入正确的数据页，然后再做二分查找
+
+如果页码+主键的目录页也超过了16kb，那么数据页就也会分裂，在更上一层也会创建数据页，来保存刚才那一层的数据页的信息，这就是一个B+树的数据结构
+
+聚簇索引：在B+树的叶子节点中不仅会保存索引数据，还会保存完整的数据行
+非聚簇索引：在B+树的叶子结点只会保存索引字段和主键字段
+
+12.添加索引的方式
+a. 创建表的时候在字段后面加primary key或者unique
+b. 在所有字段最下面加语句primary key(field)  index(field)  unique index index_name(field)
+c. alter table时候创建
+
+13. 索引的设计原则
+那些情况适合加索引：
+	a. 唯一的字段，哪怕是组合字段，都应该加上索引
+	b. 频繁使用where条件去查的字段
+	c. 频繁使用groupby order by的字段
+	d. dinstinct字段需要创建索引
+	e. 对于多表连接，where字段和join连接字段需要加索引
+	f. 使用列类型小的字段创建索引，比较tinyint
+	g. 区分度高的字段适合做索引
+	h. 使用最频繁的列放在联合索引的最左侧
+	i. 联合索引优于单值索引（这里有疑问，都是有限以最左边的field去排序的，那后面的字段排的顺序不还是乱的）
+							解释：这里并不需要用后面字段的顺序，加上后面的话，等于有了数据，就不需要再做回表操作
+	
+那些情况不适合加索引：
+	a. 在where， group by orderby  中不用的字段
+	b. 数据量很小的表
+	c. 有大量重复数据的字段上，不要创建索引
+	d. 经常更新的表
+	e. 数据是无序的列。比如uuid等，插入的话容易打乱顺序，要做页分裂。  主键还是尽量使用auto increment或者雪花算法
+	
+14. sql性能分析
+	a. 定位执行慢的sql，慢查询日志。默认是不开启这个日志的
+	show status like 'slow_queries'
+	b. 查看sql执行成本
+	show profiles
+	c. 使用explain分析查询语句
+	table: 一个explain可能查出多条数据，每条数据对应一个单表
+	
+15. 索引优化与查询优化
+	a. 物理优化和逻辑优化：物理优化就是通过索引和表连接的方式。逻辑就是优化sql的写法
+	
+	b. 索引失效
+	完全匹配
+	最佳左前缀
+	主键插入顺序
+	计算，函数，类型转换导致索引失效
+	范围条件右边的列索引失效
+	不等于索引失效
+	is not null索引失效
+	模糊查询like以%开头索引失效
+	or前后存在非索引的列
+	
+	c. 关联查询的优化
+		内连接：如果只能有一个索引，把索引放在被驱动表上效果更大，因为主表都是要全表扫描
+		如果两个表都有索引的话，会把数据少的表当做主表
+		
+		join总结：
+		用小结果集去驱动大结果集
+		为被驱动表的条件增加索引
+		增大join buffer的大小
+		减少驱动表不必要的字段的查询
+	d. 排序优化
+		在where和order by后的字段加上索引避免where的全表扫描，orderby避免file sort
+16. 主键的设计
+	最好是单调增长的唯一id
+	
+17. 数据库事务
+	a. 并发时候会出现的问题： 脏写，脏读，不可重复度，幻读
+	b. 4种隔离级别：read uncommited(解决脏写)， read commited(解决脏写，脏读)， repeatable read(解决脏写脏读不可重复度), serilizable(除了幻读都解决)
+	c. 事务的日志： redo log和undo log
+
+18. 锁
+	a. 数据库操作的几种情况
+		读读：没有问题，不需要加锁
+		写写：会有脏写问题， 任何一种隔离级别都会解决这个情况
+		读写或写读：会有脏读，幻读，不可重复读
+	b. 锁的分类：
+		按照模式：读锁（共享锁） 写锁（排他锁）
+		按照粒度：表锁，行锁，页锁
+		按照态度：乐观，悲观
+		按照方式：隐式，显式
+	c. 共享锁： select * from account lock in share mode
+	d. 排它锁:  select * from account for update
